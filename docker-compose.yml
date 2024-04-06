@@ -1,0 +1,38 @@
+version: '3.7'
+
+services:
+  go:
+    build:
+      context: ./
+      dockerfile: ./docker/go.Dockerfile
+    working_dir: /app
+#    user: 1000:1000
+    ports:
+      - "80:8080"
+
+    # command: sh -c "go run -v ./cmd/app/"
+    command: sh -c "gow run -v ./cmd/app/"
+    volumes:
+      - ./:/app
+    depends_on:
+      postgres:
+          condition: service_healthy
+  
+  postgres:
+    build: docker/postgres
+    hostname: postgres
+    restart: always
+    healthcheck:
+        test: "pg_isready"
+        start_period: 1s
+        interval: 2s
+        timeout: 30s
+        retries: 100
+    ports:
+        - "5432:5432"
+    volumes:
+        - ./docker/postgres/data:/var/lib/postgresql/data
+    environment:
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+
